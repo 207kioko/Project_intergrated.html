@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Control Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-image: url('/home/moses/Documents/MOSES/DOWNLOADS/hostel.jpg'); /* Replace 'path_to_your_image.jpg' with your image file path */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            flex-direction: column;
+        }
+        header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        h2 {
+            color: orangered; /* Change title color to green */
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        .form-container {
+            border: 1px solid orangered;
+            padding: 2px;
+            margin-bottom: 20px;
+            max-width: 400px;
+            background-color: orangered;
+            margin: 10px auto;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .form-container input[type="text"], 
+        .form-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .students-list {
+            max-width: 400px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid orangered;
+            margin: 10px auto;
+        }
+        .students-list p {
+            margin-bottom: 5px;
+        }
+        .students-list button {
+            margin-top: 5px;
+            padding: 8px 12px;
+            background-color: orangered;
+            color: rgb(255, 255, 255);
+            border: none;
+            cursor: pointer;
+        }
+        .students-list button:hover {
+            background-color: orangered;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrious/dist/qrious.min.js"></script>
+</head>
+<body>
+    <header>
+        <h2>Hostel Admin Control Management</h2>
+    </header>
+    <div class="container">
+        <div class="form-container">
+            <h3>Add Student to List</h3>
+            <form id="addForm">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" name="studentName" required>
+                <label for="studentID">Student ID:</label>
+                <input type="text" id="studentID" name="studentID" required>
+                <input type="submit" value="Add Student">
+            </form>
+        </div>
+
+        <div class="form-container">
+            <h3>Remove Student from List</h3>
+            <form id="removeForm">
+                <label for="removeID">Student ID:</label>
+                <input type="text" id="removeID" name="removeID" required>
+                <input type="submit" value="Remove Student">
+            </form>
+        </div>
+
+        <div class="students-list">
+            <h3>Access List</h3>
+            <div id="accessList"></div>
+        </div>
+
+        <div class="students-list">
+            <h3>Deny List</h3>
+            <div id="denyList"></div>
+        </div>
+    </div>
+
+    <script>
+        let accessStudents = [
+            { id: "123456", name: "John Doe" },
+            { id: "345678", name: "Alice Johnson" }
+        ];
+
+        let denyStudents = [
+            { id: "789012", name: "Jane Smith" }
+        ];
+
+        function displayLists() {
+            let accessListHtml = "";
+            let denyListHtml = "";
+
+            accessStudents.forEach(student => {
+                accessListHtml += `<p>${student.name} (ID: ${student.id}) - Access is allowed <button onclick="downloadQRCode('${student.id}', '${student.name}')">Download QR Code</button></p>`;
+            });
+
+            denyStudents.forEach(student => {
+                denyListHtml += `<p>${student.name} (ID: ${student.id}) - Access is denied</p>`;
+            });
+
+            document.getElementById("accessList").innerHTML = accessListHtml;
+            document.getElementById("denyList").innerHTML = denyListHtml;
+        }
+
+        document.getElementById("addForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let studentName = document.getElementById("studentName").value.trim();
+            let studentID = document.getElementById("studentID").value.trim();
+
+            if (accessStudents.some(student => student.id === studentID) || 
+                denyStudents.some(student => student.id === studentID)) {
+                alert("Student with this ID already exists in access or deny list.");
+                return;
+            }
+
+            accessStudents.push({ id: studentID, name: studentName });
+            displayLists();
+            document.getElementById("addForm").reset();
+        });
+
+        document.getElementById("removeForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let removeID = document.getElementById("removeID").value.trim();
+
+            let removedFromAccess = accessStudents.findIndex(student => student.id === removeID);
+            if (removedFromAccess !== -1) {
+                accessStudents.splice(removedFromAccess, 1);
+                displayLists();
+                document.getElementById("removeForm").reset();
+                return;
+            }
+
+            let removedFromDeny = denyStudents.findIndex(student => student.id === removeID);
+            if (removedFromDeny !== -1) {
+                denyStudents.splice(removedFromDeny, 1);
+                displayLists();
+                document.getElementById("removeForm").reset();
+                return;
+            }
+
+            alert("Student with this ID not found in access or deny list.");
+        });
+
+        function downloadQRCode(id, name) {
+            let qr = new QRious({
+                value: `ID: ${id}, Name: ${name}`,
+                size: 200
+            });
+            let link = document.createElement('a');
+            link.href = qr.toDataURL();
+            link.download = `QR_${name}_${id}.png`;
+            link.click();
+        }
+
+        displayLists();
+    </script>
+</body>
+</html>
